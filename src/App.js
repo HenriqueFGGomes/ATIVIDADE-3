@@ -1,11 +1,11 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
 
-import Menu from './Pages/Menu';
-import Home from './Pages/Home';
-import Imc from './Pages/Imc';
-import Cadastro from './Pages/Cadastro';
-import SobreNos from './Pages/SobreNos';
-import Footer from './Pages/Footer';
+import Menu from './Pages/Menu'
+import Home from './Pages/Home'
+import Imc from './Pages/Imc'
+import Cadastro from './Pages/Cadastro'
+import SobreNos from './Pages/SobreNos'
+import Footer from './Pages/Footer'
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
         <Footer />
       </main>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

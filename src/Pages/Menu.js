@@ -1,5 +1,5 @@
-import { Fragment } from "react";
-import { Navbar, Nav } from 'react-bootstrap';
+import { Fragment } from "react"
+import { Navbar, Nav } from 'react-bootstrap'
 
 const Menu = () => {
     return (
@@ -22,6 +22,6 @@ const Menu = () => {
             </Navbar>
         </Fragment>
     )
-};
+}
 
-export default Menu;
+export default Menu

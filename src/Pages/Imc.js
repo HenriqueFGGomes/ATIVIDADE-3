@@ -1,70 +1,70 @@
-import { Fragment, React, Component, createRef } from "react";
-import ImcApi from "../Services/ImcApi";
-import InputMask from 'react-input-mask';
-import ModalAlert from "../Components/ModalAlert";
+import { Fragment, React, Component, createRef } from "react"
+import ImcApi from "../Services/ImcApi"
+import InputMask from 'react-input-mask-format'
+import ModalAlert from "../Components/ModalAlert"
 class Imc extends Component{
     constructor(props) {
-        super(props);
+        super(props)
         this.dadosImc = [
             {descricao: "MENOR QUE 18,5", classificacao: "MAGREZA", grau: "0"},
             {descricao: "ENTRE 18,5 E 24,9", classificacao: "NORMAL", grau: "0"},
             {descricao: "ENTRE 25,0 E 29,9", classificacao: "MAGREZA", grau: "I"},
             {descricao: "ENTRE 30,0 E 39,9", classificacao: "MAGREZA", grau: "II"},
             {descricao: "MAIOR QUE 40,0", classificacao: "OBESIDADE GRAVE", grau: "III"}
-        ];
-        this.modalRef = createRef();
+        ]
+        this.modalRef = createRef()
         this.state = {altura: "", peso: "", erros: {altura: [], peso: []}}
     }
 
     mostrarModal = (title, body) => {
-        this.modalRef.current.handleShow({show: true, title, body});
-    };
+        this.modalRef.current.handleShow({show: true, title, body})
+    }
 
     escutadorDeInput = event => {
-        const { name, value } = event.target;
+        const { name, value } = event.target
         this.setState({
             [name]: value
-        });
+        })
     }
 
     resetErros = () =>{
-        const erros = "erros";
+        const erros = "erros"
         this.setState({ 
             [erros]: {altura: [], peso: []}
-        });
+        })
     }
 
     calcularImc = () => {
-        this.resetErros();
-        const { altura, peso} = this.state;
+        this.resetErros()
+        const { altura, peso} = this.state
         
 
         ImcApi.calcular({altura, peso})
         .then( resp => {
-            this.mostrarModal("Cálculo de IMC", resp.data.message);
+            this.mostrarModal("Cálculo de IMC", resp.data.message)
         })
         .catch( (e) =>{
             if(e.response && e.response.status === 422){
-                let errosCalcImc = {};
+                let errosCalcImc = {}
                 Object.entries(e.response.data.errors).forEach((obj, index) => {
-                    index === 0 && document.querySelector(`[name=${[obj[0]]}`).focus();
-                    errosCalcImc = {...errosCalcImc, [obj[0]]: [obj[1]]};
+                    index === 0 && document.querySelector(`[name=${[obj[0]]}`).focus()
+                    errosCalcImc = {...errosCalcImc, [obj[0]]: [obj[1]]}
                 })
 
-                this.setState({ 'erros': {...this.state.erros, ...errosCalcImc}});
+                this.setState({ 'erros': {...this.state.erros, ...errosCalcImc}})
             }else if(e.response 
                 && e.response.data
                  && e.response.data.message){
-                    this.mostrarModal("Cálculo de IMC", e.response.data.message);
+                    this.mostrarModal("Cálculo de IMC", e.response.data.message)
             }else{
-                this.mostrarModal("Cálculo de IMC", "Ocorreu um erro ao tentar calcular seu IMC.");
-                console.log(e);
+                this.mostrarModal("Cálculo de IMC", "Ocorreu um erro ao tentar calcular seu IMC.")
+                console.log(e)
             }
-        });
+        })
     }
 
     render() {
-        const { altura, peso } = this.state;
+        const { altura, peso } = this.state
 
         return (
             <Fragment>
@@ -110,7 +110,6 @@ class Imc extends Component{
                                             id="pesoImc" 
                                             placeholder="080.0" 
                                             mask="999.99"
-                                            maskChar={null}
                                         />
                                         <div className="invalid-feedback">
                                             {this.state.erros.peso.map( (item, index) => <div key={index} >{item}</div>)}
@@ -127,7 +126,6 @@ class Imc extends Component{
                                             id="alturaImc" 
                                             placeholder="1.70" 
                                             mask="9.99"
-                                            maskChar={null}
                                         />
                                         <div className="invalid-feedback">
                                             {this.state.erros.altura.map( (item, index) => <div key={index} >{item}</div>)}
@@ -146,6 +144,6 @@ class Imc extends Component{
         )
     }
     
-};
+}
 
-export default Imc;
+export default Imc
