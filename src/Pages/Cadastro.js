@@ -14,8 +14,6 @@ class Cadastro extends Component {
         }
 
         this.modalRef = createRef()
-        this.cepRef = createRef()
-        this.cpfRef = createRef()
     }
 
     aceitarTermo = () =>{
