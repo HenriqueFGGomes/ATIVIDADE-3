@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment } from "react"
 
 const SobreNos = () => {
     return (
@@ -36,7 +36,7 @@ const SobreNos = () => {
                 </div>
                 <div className="row">
                     <div className="col-md-6">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1459.2515734266078!2d-46.78208003386618!3d-23.66644551405044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1spt-BR!2sbr!4v1648957274059!5m2!1spt-BR!2sbr" width="100%" height="300" ></iframe>
+                        <iframe title="mapa" src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1459.2515734266078!2d-46.78208003386618!3d-23.66644551405044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1spt-BR!2sbr!4v1648957274059!5m2!1spt-BR!2sbr" width="100%" height="300" ></iframe>
                     </div>
                     <div className="col-md-6">
                         <p>O Saúde UNASP Está localizado na Estrada de Itapecerica, 5859 - Capão Redondo, São Paulo - SP, 05890-020.</p>
@@ -45,6 +45,6 @@ const SobreNos = () => {
             </section>
         </Fragment>
     )
-};
+}
 
-export default SobreNos;
+export default SobreNos

@@ -1,54 +1,67 @@
-import { Component, Fragment, React } from "react";
-import EnderecoApi from "../Services/EnderecoApi"; 
-import CadastroApi from "../Services/CadastroApi";
-import ReactInputMask from "react-input-mask";
+import { Component, Fragment, React, createRef } from "react"
+import EnderecoApi from "../Services/EnderecoApi" 
+import CadastroApi from "../Services/CadastroApi"
+import ReactInputMask from "react-input-mask-format"
+import ModalAlert from "../Components/ModalAlert"
 
 class Cadastro extends Component {
-
     constructor(props) {
-        super(props);
+        super(props)
         this.state = {
             listaEstados: [],
-            formCadastro:{
-                aceito: false, 
-                nomeCompleto: "",
-                cpf: "",
-                dataNascimento: "",
-                sexo: "",
-                cep: "",
-                email: "",
-                numeroLogradouro: ""
-            },
-            erros: {
-                nomeCompleto: [],
-                cpf: [],
-                dataNascimento: [],
-                cep: [],
-                sexo: [],
-                email: [],
-                numeroLogradouro: []
-            }
+            formCadastro: {...{}, ...this.getFieldsForm()},
+            erros: {...{}, ...this.getFieldErrors()}
         }
+
+        this.modalRef = createRef()
+        this.cepRef = createRef()
+        this.cpfRef = createRef()
     }
 
     aceitarTermo = () =>{
         this.setState({ 
-                formCadastro: {
-                    ...this.state.formCadastro, ...{aceito: !this.state.formCadastro.aceito}
-                
-               
-            
-            }})}
+            formCadastro: {
+                ...this.state.formCadastro, aceito: !this.state.formCadastro.aceito
+            }
+        })
+    }
+
+    getFieldsForm = () => {
+        return  {
+                nomeCompleto: "", dataNascimento: "", sexo: "F", cep: "", cpf: "", 
+                uf: "", cidade: "", logradouro: "", numeroLogradouro: "", email: "", 
+                expectativa: "", aceito: false
+        }
+    }
+
+    getFieldErrors = () => {
+        return {
+            nomeCompleto: [], dataNascimento: [], sexo: [], 
+            cep: [], cpf: [], uf: [],  cidade: [],  logradouro: [],  
+            numeroLogradouro: [],  email: [],  expectativa: []
+        }
+    }
+
+    mostrarModal = (title, body) => {
+        this.modalRef.current.handleShow({show: true, title, body})
+    }
+
     componentDidMount(){
         EnderecoApi.getEstados()
-            .then(resp =>  this.setState( {listaEstados: resp.data}) );
+            .then(resp =>  this.setState( {listaEstados: resp.data}) )
     }
+
+    resetErros = () =>{
+        this.setState({ 
+            erros: {...{}, ...this.getFieldErrors()}
+        })
+    }
+
     escutadorDeInputFormCadastro = event => {
-        const { name, value } = event.target;
+        const { name, value } = event.target
         this.setState({
-            formCadastro: {...this.state.formCadastro, ...{[name]: value} }
-            
-        });
+            formCadastro: {...this.state.formCadastro, [name]: value }
+        })
     }
 
     pesquisarEndereco = () =>{
@@ -60,35 +73,49 @@ class Cadastro extends Component {
                     uf: resp.data.uf,
                     logradouro: resp.data.logradouro
                 }}
-            });
+            })
         })
     }
 
     enviarFormularioCadastro = () => { 
+        this.resetErros()
+        const form = this.state.formCadastro
+        form.cpf = form.cpf.replace(/\D/g, "")
+        form.cep = form.cep.replace(/\D/g, "")
 
-            CadastroApi.cadastrar(this.state.formCadastro)
-            .then( r => { 
-                alert ("Deu certo")
-            })
-            .catch( e =>{
-                console.log(e.response) 
-
-                if(e.response && e.response.status === 422){
-                    let errosFormCadastro = {};
-                    Object.entries(e.response.data.errors).forEach((obj, index) => {
-                        index === 0 && document.querySelector(`[name=${[obj[0]]}`).focus();
-                        errosFormCadastro = {...errosFormCadastro, [obj[0]]: [obj[1]]};
-                    })
-                    
-                    this.setState({ 'erros': {...this.state.erros, ...errosFormCadastro}});
-                }
-            })
+        CadastroApi.cadastrar(form)
+        .then( response => { 
+            if(response.data && response.data.message){
+                this.mostrarModal("Atenção!", response.data.message)
+            }else{
+                this.mostrarModal("Atenção!", response.data.message)
+            }
+            this.setState( {formCadastro: this.getFieldsForm()})
+        })
+        .catch( e =>{
+            console.log(e.response) 
+            if(e.response && e.response.status === 422 && e.response.data.errors){
+                let errosFormCadastro = {}
+                Object.entries(e.response.data.errors).forEach((obj, index) => {
+                    const nomeDoCampo = obj[0]
+                    const listaDeErros = obj[1]
+                    if(index === 0){
+                        this[`ref-cadastro-${nomeDoCampo}`].focus()
+                    }
+                    errosFormCadastro = {...errosFormCadastro, [nomeDoCampo]: listaDeErros}
+                })
+                this.setState({ 'erros': {...this.state.erros, ...errosFormCadastro}})
+            }else if(e.response 
+                && e.response.data
+                    && e.response.data.message){
+                this.mostrarModal("Atenção!", e.response.data.message)
+            }else{
+                this.mostrarModal("Atenção!", "Ocorreu um erro inesperado...")
+            }
+        })  
     }
     
-    
-    
     render() {
-       
         const formCadastro = this.state.formCadastro
         return (
             <Fragment>
@@ -107,13 +134,14 @@ class Cadastro extends Component {
                                 type="text" 
                                 className={"form-control" +  (this.state.erros.nomeCompleto.length > 0 ? " is-invalid"  : "")} 
                                 id="cadastroNomeCompleto" 
-                                value = {formCadastro.nomeCompleto} 
+                                value={formCadastro.nomeCompleto} 
                                 onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-nomeCompleto"] = input }
                                 name="nomeCompleto" 
                                 placeholder="Nome Completo" />
                                 <div className="invalid-feedback">
-                                            {this.state.erros.nomeCompleto.map( (item, index) => <div key={index} >{item}</div>)}
-                                        </div>
+                                    {this.state.erros.nomeCompleto.map( (item, index) => <div key={index} >{item}</div>)}
+                                 </div>
                             </div>
                             
                             <div className="col-md-4 mb-3">
@@ -121,15 +149,14 @@ class Cadastro extends Component {
                                 <input 
                                 type="date" 
                                 className={"form-control" +  (this.state.erros.dataNascimento.length > 0 ? " is-invalid"  : "")} 
-                                value = {formCadastro.dataNascimento}
+                                value={formCadastro.dataNascimento}
                                 name="dataNascimento"
                                 onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-dataNascimento"] = input }
                                 id="dataNascimento" />
                                 <div className="invalid-feedback">
-                                        {this.state.erros.dataNascimento.map( (item, index) => <div key={index} >{item}</div>)}
-                                        </div>
-                                
-                                
+                                    {this.state.erros.dataNascimento.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="col-md-4 mb-3">
                                 <div className="row">
@@ -143,7 +170,7 @@ class Cadastro extends Component {
                                                 onChange={this.escutadorDeInputFormCadastro}
                                                 id="cadastroFeminino" 
                                                 value="F" 
-                                                defaultChecked={formCadastro==="F"}/>
+                                                defaultChecked={formCadastro.sexo==="F"}/>
                                                     <label className="form-check-label" htmlFor="cadastroFeminino" name="sexo">
                                                         Feminino
                                                     </label>
@@ -152,11 +179,11 @@ class Cadastro extends Component {
                                                 <input 
                                                 className="form-check-input" 
                                                 type="radio" 
-                                                onChange={this.escutadorDeInputFormCadastro} 
+                                                onChange={this.escutadorDeInputFormCadastro}
                                                 name="sexo" 
                                                 id="cadastroMasculino" 
                                                 value="M" 
-                                                defaultChecked={formCadastro==="M"}/>
+                                                defaultChecked={formCadastro.sexo==="M"}/>
                                                     <label className="form-check-label" htmlFor="cadastroMasculino">
                                                         Masculino
                                                     </label>
@@ -166,10 +193,10 @@ class Cadastro extends Component {
                                                 className="form-check-input" 
                                                 type="radio" 
                                                 name="sexo" 
-                                                onChange={this.escutadorDeInputFormCadastro} 
+                                                onChange={this.escutadorDeInputFormCadastro}
                                                 id="cadastroOutro" 
                                                 value="O"
-                                                defaultChecked={formCadastro==="O"}
+                                                defaultChecked={formCadastro.sexo==="O"}
                                                  />
                                                     <label className="form-check-label" htmlFor="cadastroOutro">
                                                         Outro
@@ -190,32 +217,44 @@ class Cadastro extends Component {
                                 id="cpf"
                                 value={formCadastro.cpf} 
                                 onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-cpf"] = input }
                                 name= "cpf"
                                 placeholder="000.000.000-00" 
-                                data-mask="999.999.999-99" />
-                                 <div className="invalid-feedback">
-                                            {this.state.erros.cpf.map( (item, index) => <div key={index} >{item}</div>)}
-                                        </div>
+                                mask="999.999.999-99" />
+                                <div className="invalid-feedback">
+                                    {this.state.erros.cpf.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="col-md-3 mb-3">
-                                <label htmlFor="cadastroCep">CEP x:</label>
+                                <label htmlFor="cadastroCep">CEP:</label>
                                 <ReactInputMask 
                                 type="text" 
                                 className={"form-control" +  (this.state.erros.cep.length > 0 ? " is-invalid"  : "")} 
                                 id="cep" 
-                                value = {formCadastro.cep}
+                                value={formCadastro.cep}
                                 onChange={this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-cep"] = input }
                                 onBlur={this.pesquisarEndereco}
-                                name= "cep"
+                                name="cep"
                                 placeholder="00000-000" 
                                 mask="99999-999" />
                                 <div className="invalid-feedback">
-                                            {this.state.erros.cep.map( (item, index) => <div key={index} >{item}</div>)}
-                                        </div>
+                                    {this.state.erros.cep.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="col-md-6 mb-3">
                                 <label htmlFor="cadastroLogradouro">Logradouro:</label>
-                                <input type="text" className="form-control" id="cadastroLogradouro" placeholder="Logradouro" />
+                                <input type="text" 
+                                className={"form-control" +  (this.state.erros.logradouro.length > 0 ? " is-invalid"  : "")} 
+                                name="logradouro"
+                                id="cadastroLogradouro" 
+                                value={formCadastro.logradouro}
+                                onChange={this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-logradouro"] = input }
+                                placeholder="Logradouro" />
+                                <div className="invalid-feedback">
+                                    {this.state.erros.logradouro.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="col-md-3 mb-3">
                                 <label htmlFor="cadastroNumeroLogradouro">Número Logradouro:</label>
@@ -225,11 +264,12 @@ class Cadastro extends Component {
                                 id="cadastroNumeroLogradouro" 
                                 value={formCadastro.numeroLogradouro}
                                 onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-numeroLogradouro"] = input }
                                 name="numeroLogradouro"
                                 placeholder="Número Logradouro" />
                                 <div className="invalid-feedback">
-                                            {this.state.erros.numeroLogradouro.map( (item, index) => <div key={index} >{item}</div>)}
-                                        </div> 
+                                    {this.state.erros.numeroLogradouro.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div> 
                             </div>
                             <div className="col-md-12 mb-3">
                                 <label htmlFor="cadastroEmail">Endereço de email:</label>
@@ -237,45 +277,76 @@ class Cadastro extends Component {
                                 type="email" 
                                 className={"form-control" +  (this.state.erros.email.length > 0 ? " is-invalid"  : "")} 
                                 id="cadastroEmail" 
-                                value = {formCadastro.email} 
+                                value={formCadastro.email} 
                                 onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-email"] = input }
                                 name="email" 
                                 aria-describedby="emailHelp" 
                                 placeholder="Seu email" />
                                 <div className="invalid-feedback">
-                                            {this.state.erros.email.map( (item, index) => <div key={index} >{item}</div>)}
-                                        </div>
-                                    <small id="emailHelp" className="form-text text-muted">Nunca vamos compartilhar seu email, com ninguém.</small>
+                                    {this.state.erros.email.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
+                                <small id="emailHelp" className="form-text text-muted">Nunca vamos compartilhar seu email, com ninguém.</small>
                             </div>
                             <div className="col-md-4 mb-3">
                                 <label className="mr-sm-2" htmlFor="cadastroUf">Estado:</label>
-                                <select className="form-control custom-select mr-sm-2" id="cadastroUf" value={this.state.formCadastro.uf}>
+                                <select 
+                                className={"form-control custom-select mr-sm-2" +  (this.state.erros.uf.length > 0 ? " is-invalid"  : "")} 
+                                id="cadastroUf" 
+                                name="uf"
+                                onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-uf"] = input }
+                                value={formCadastro.uf}>
                                     <option value="">Selecione...</option>
                                     {this.state.listaEstados.map( item => <option key={item.uf} value={item.uf}>{item.nome}</option>)}
                                 </select>
+                                <div className="invalid-feedback">
+                                    {this.state.erros.uf.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="col-md-8 mb-3">
                                 <label htmlFor="cadastroCidade">Cidade:</label>
-                                <input type="text" className="form-control" id="cadastroCidade" placeholder="Cidade" />
+                                <input type="text" 
+                                    className={"form-control" +  (this.state.erros.cidade.length > 0 ? " is-invalid"  : "")} 
+                                    id="cadastroCidade"
+                                    name="cidade"
+                                    onChange = {this.escutadorDeInputFormCadastro}
+                                    ref={ input => this["ref-cadastro-cidade"] = input }
+                                    value={formCadastro.cidade}
+                                    placeholder="Cidade" />
+                                <div className="invalid-feedback">
+                                    {this.state.erros.cidade.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="col-md-12 mb-3">
                                 <label htmlFor="cadastroExpectativa">Qual sua expectativa?</label>
-                                <textarea className="form-control" id="cadastroExpectativa" rows="5"></textarea>
+                            <textarea 
+                                className={"form-control" +  (this.state.erros.expectativa.length > 0 ? " is-invalid"  : "")} 
+                                id="cadastroExpectativa" 
+                                name="expectativa"
+                                value={formCadastro.expectativa}
+                                onChange = {this.escutadorDeInputFormCadastro}
+                                ref={ input => this["ref-cadastro-expectativa"] = input }
+                                rows="5"></textarea>
+                                <div className="invalid-feedback">
+                                    {this.state.erros.expectativa.map( (item, index) => <div key={index} >{item}</div>)}
+                                </div>
                             </div>
                             <div className="mb-3 form-check">
-                                <input type="checkbox" className="form-check-input" id="cadastroDeAcordo" onChange={this.aceitarTermo}/>
-                                    <label className="form-check-label" htmlFor="cadastroDeAcordo">Estou de acordo com os termos</label>
+                                <input type="checkbox" className="form-check-input" id="cadastroDeAcordo" onChange={this.aceitarTermo} checked={formCadastro.aceito}/>
+                                <label className="form-check-label" htmlFor="cadastroDeAcordo">Estou de acordo com os termos</label>
                             </div>
                             <div className="col-md-12 mb-3">
-                                <button id="btnSubmitCadastro" type="button" className="btn btn-primary" onClick={this.enviarFormularioCadastro} disabled={!this.state.formCadastro.aceito}>Enviar</button>
+                                <button id="btnSubmitCadastro" type="button" className="btn btn-primary" onClick={this.enviarFormularioCadastro} disabled={!formCadastro.aceito}>Enviar</button>
                             </div>
                         </div>
                     </form>
                 </section>
+                <ModalAlert ref={this.modalRef} />
             </Fragment>
         )
     }
     
-};
+}
 
-export default Cadastro;
+export default Cadastro

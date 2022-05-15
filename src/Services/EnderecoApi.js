@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'axios'
 
 const EnderecoApi = {
     getEndereco: cep => {return axios.get(`https://app.professordaniloalves.com.br/api/v1/endereco/${cep}`)},
@@ -6,4 +6,4 @@ const EnderecoApi = {
 }
 
 
-export default EnderecoApi;
+export default EnderecoApi

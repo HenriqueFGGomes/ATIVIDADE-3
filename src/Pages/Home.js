@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment } from "react"
 
 const Home = () => {
     return (
@@ -8,6 +8,6 @@ const Home = () => {
             <img src="Assets/Images/banner.jpeg" className="img-fluid" alt="Banner Saúde UNASP" />
         </Fragment>
     )
-};
+}
 
-export default Home;
+export default Home

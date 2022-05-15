@@ -1,19 +1,19 @@
-import { Fragment, React, Component } from "react";
-import { Button, Modal} from 'react-bootstrap';
+import { Fragment, React, Component } from "react"
+import { Button, Modal} from 'react-bootstrap'
 
 
 class ModalAlert extends Component{
 
     constructor(props) {
-        super(props);
+        super(props)
         this.state = {show: false, title: "", body: ""}
     }
 
-    handleClose = () => this.setState({show: false, title: "", body: "" });
-    handleShow = modal => this.setState( modal );
+    handleClose = () => this.setState({show: false, title: "", body: "" })
+    handleShow = modal => this.setState( modal )
 
     render() {
-        const {show, title, body} = this.state;
+        const {show, title, body} = this.state
 
         return (
             <Fragment>
@@ -29,8 +29,8 @@ class ModalAlert extends Component{
                     </Modal.Footer>
                 </Modal>
             </Fragment>
-        );
+        )
     }
 }
 
-export default ModalAlert;
+export default ModalAlert
