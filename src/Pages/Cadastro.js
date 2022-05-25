@@ -60,6 +60,11 @@ class Cadastro extends Component {
         this.setState({
             formCadastro: {...this.state.formCadastro, [name]: value }
         })
+        console.log(value)
+        if(name === "cpf"){
+            CadastroApi.consultar(value.replaceAll(".", "").replace("-", ""))
+            .then( resp => alert("já existe"))
+        }
     }
 
     pesquisarEndereco = () =>{
